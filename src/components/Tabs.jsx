@@ -4,7 +4,7 @@ import { setActiveTabs } from "../redux/features/searchSlice"
 
 const Tabs = () => {
 
-    const tabs = ['Photos', 'Videos', 'GIF']
+    const tabs = ['photos', 'videos', 'gif']
     const dispatch = useDispatch()
 
     const activeTab = useSelector((state)=>state.search.activeTab)
@@ -12,8 +12,8 @@ const Tabs = () => {
   return (
     <div className='flex gap-10 p-10'>
         {
-            tabs.map(function(elem){
-                return (<button key={elem} className={`${(activeTab==elem?'bg-blue-700':'bg-gray-600')}  px-5 py-2 rounded-lg cursor-pointer active:scale-x-95`}
+            tabs.map(function(elem, idx){
+                return (<button key={idx} className={`${(activeTab==elem?'bg-blue-700':'bg-gray-600')} transition px-5 py-2 rounded-lg cursor-pointer active:scale-x-95`}
                 onClick={()=>{
                     dispatch(setActiveTabs(elem))
                 }}>{elem}</button>)
