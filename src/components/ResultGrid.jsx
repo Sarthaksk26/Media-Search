@@ -1,85 +1,94 @@
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGIF, fetchPhotos, fetchVideos } from "../api/mediaApi";
-import { setQuery, setLoading, setError, setResults } from "../redux/features/searchSlice";
-import { useEffect } from "react";
+import { setLoading, setError, setResults, appendResults, incrementPage } from "../redux/features/searchSlice";
+import { transformPhotoData, transformVideoData, transformGifData } from "../utils/transformers";
 import ResultCard from "./ResultCard";
-
-
+import { LoadingSpinner, ErrorMessage, EmptyState } from "./StatusMessages";
 
 const ResultGrid = () => {
-
-    const { query, activeTab, results, loading, error } = useSelector((store) => store.search)
-
+    const { query, activeTab, results, loading, error, page, hasMore } = useSelector((store) => store.search)
     const dispatch = useDispatch()
 
+    const fetchData = async (isLoadMore = false) => {
+        if (!query) return;
 
-    useEffect(function () {
-        const getData = async () => {
-            if(!query) return;
-            try {
-                dispatch(setLoading())
-                let data = [];
-                if (activeTab == 'photos') {
-                    let response = await fetchPhotos(query);
-                    data = response.results.map((item) => ({
-                        id: item.id,
-                        type: 'photo',
-                        title: item.alt_description,
-                        thumbnail: item.urls.thumb,
-                        src: item.urls.full
-                    }))
-                    console.log(data)
-                }
-                if (activeTab == 'videos') {
-                    let response = await fetchVideos(query);
-                    data = response.videos.map((item) => ({
-                        id: item.id,
-                        type: 'video',
-                        title: item.user.name || 'video',
-                        thubnail: item.image,
-                        src: item.video_files[0].link
-                    }))
-                    console.log(data)
-                }
-                if (activeTab == 'gif') {
-                    let response = await fetchGIF(query);
-                    data = response.results.map((item) => ({
-                        id: item.id,
-                        type: 'gif',
-                        title: item.title || 'GIF',
-                        thubnail: item.media_formats.tinygif.url,
-                        src: item.media_formats.gif.url
-                    }))
-                    console.log(data)
-                }
+        try {
+            if (!isLoadMore) dispatch(setLoading());
+            
+            let rawData;
+            let transformedData = [];
 
-                dispatch(setResults(data))
-            } catch (error) {
-                dispatch(setError(error.message))
+            switch (activeTab) {
+                case 'photos':
+                    rawData = await fetchPhotos(query, page);
+                    transformedData = transformPhotoData(rawData);
+                    break;
+                case 'videos':
+                    rawData = await fetchVideos(query, page);
+                    transformedData = transformVideoData(rawData);
+                    break;
+                case 'gif':
+                    rawData = await fetchGIF(query, page);
+                    transformedData = transformGifData(rawData);
+                    break;
             }
-        }
-        getData()
-    }, [query, activeTab])
 
-    if (error) {
-        return <h1>Error</h1>
+            if (isLoadMore) {
+                dispatch(appendResults(transformedData));
+            } else {
+                dispatch(setResults(transformedData));
+            }
+        } catch (err) {
+            dispatch(setError(err.message));
+        }
     }
-    if (loading) {
-        return <h1>Loading....</h1>
+
+    // Reset and fetch when query or tab changes
+    useEffect(() => {
+        if (query) fetchData(false);
+    }, [query, activeTab]);
+
+    // Load more when page increments
+    useEffect(() => {
+        if (page > 1) fetchData(true);
+    }, [page]);
+
+    if (error) return <ErrorMessage message={error} />;
+    if (!query) return <EmptyState />;
+    if (loading && results.length === 0) return <LoadingSpinner fullScreen />;
+    if (!results.length && !loading) {
+        return (
+            <div className="text-center py-24 text-gray-500">
+                <p className="text-xl">No results for <span className="font-bold text-black">"{query}"</span></p>
+            </div>
+        );
     }
 
     return (
-        <div className="flex justify-center flex-wrap gap-6 rounded overflow-auto px-10">
-            {
-                results.map((item) => {
-                    return <div key={item.id}>
-                        <a href="">
-                            <ResultCard 
-                            item={item}
-                        /> </a>                    
+        <div className="px-4 py-6 md:px-8">
+            <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+                {results.map((item) => (
+                    <div key={`${item.type}-${item.id}`} className="break-inside-avoid">
+                        <ResultCard item={item} />
                     </div>
-                })
-            }
+                ))}
+            </div>
+
+            {hasMore && results.length > 0 && (
+                <div className="flex justify-center py-12">
+                    {loading ? (
+                        <LoadingSpinner />
+                    ) : (
+                        <button
+                            onClick={() => dispatch(incrementPage())}
+                            className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-black hover:border-black px-8 py-3 rounded-full font-medium transition-all shadow-sm"
+                        >
+                            Load More
+                        </button>
+                    )}
+                </div>
+            )}
         </div>
     )
 }
