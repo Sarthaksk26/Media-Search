@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
+import { type SearchResult } from '../redux/features/searchSlice';
 
-const ResultCard = ({ item }) => {
+
+interface ResultCardProps{
+    item: SearchResult;
+}
+
+const ResultCard = ({ item}:ResultCardProps) => {
     const [isHovered, setIsHovered] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
-    const videoRef = useRef(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     // Handle Video Autoplay on Hover
     useEffect(() => {
@@ -17,7 +23,7 @@ const ResultCard = ({ item }) => {
         }
     }, [isHovered, item.type])
 
-    const handleDownload = async (e) => {
+    const handleDownload = async (e:React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         try {
             const response = await fetch(item.src);

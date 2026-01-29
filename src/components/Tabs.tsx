@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux"
-import { setActiveTabs } from "../redux/features/searchSlice"
+import { setActiveTabs,type SearchState } from "../redux/features/searchSlice"
 
 const Tabs = () => {
     const tabs = [
@@ -8,7 +8,7 @@ const Tabs = () => {
         { id: 'gif', label: 'GIFs' }
     ]
     const dispatch = useDispatch()
-    const activeTab = useSelector((state) => state.search.activeTab)
+    const activeTab = useSelector((state: { search: SearchState }) => state.search.activeTab)
 
     return (
         <div className='pb-4 pt-2 px-4'>

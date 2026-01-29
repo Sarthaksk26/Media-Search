@@ -2,22 +2,24 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchGIF, fetchPhotos, fetchVideos } from "../api/mediaApi";
 import { setLoading, setError, setResults, appendResults, incrementPage } from "../redux/features/searchSlice";
+import {type SearchState,type SearchResult } from "../redux/features/searchSlice";
 import { transformPhotoData, transformVideoData, transformGifData } from "../utils/transformers";
 import ResultCard from "./ResultCard";
 import { LoadingSpinner, ErrorMessage, EmptyState } from "./StatusMessages";
 
 const ResultGrid = () => {
-    const { query, activeTab, results, loading, error, page, hasMore } = useSelector((store) => store.search)
+    const { query, activeTab, results, loading, error, page, hasMore } = useSelector((store: { search: SearchState }) => store.search)
+    
     const dispatch = useDispatch()
 
-    const fetchData = async (isLoadMore = false) => {
+    const fetchData = async (isLoadMore :boolean = false) => {
         if (!query) return;
 
         try {
             if (!isLoadMore) dispatch(setLoading());
             
-            let rawData;
-            let transformedData = [];
+            let rawData :any;
+            let transformedData: SearchResult[] = [];
 
             switch (activeTab) {
                 case 'photos':
@@ -40,7 +42,8 @@ const ResultGrid = () => {
                 dispatch(setResults(transformedData));
             }
         } catch (err) {
-            dispatch(setError(err.message));
+            const message = err instanceof Error ? err.message :"An unknown error occurred";
+            dispatch(setError(message));
         }
     }
 

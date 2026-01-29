@@ -1,12 +1,19 @@
 // Combining small components into one file to reduce clutter
+interface LoadingSpinnerProps {
+    fullScreen?: boolean; // Optional because you provide a default value of 'false'
+}
 
-export const LoadingSpinner = ({ fullScreen = false }) => (
+export const LoadingSpinner = ({ fullScreen = false }: LoadingSpinnerProps) => (
     <div className={`flex flex-col justify-center items-center gap-3 ${fullScreen ? 'min-h-[50vh]' : ''}`}>
         <div className="w-8 h-8 border-2 border-gray-200 border-t-black rounded-full animate-spin"></div>
     </div>
 );
 
-export const ErrorMessage = ({ message }) => (
+interface ErrorMessageProps {
+    message: string;
+}
+
+export const ErrorMessage = ({ message }:ErrorMessageProps) => (
     <div className="flex justify-center p-8">
         <div className="bg-red-50 text-red-600 px-6 py-4 rounded-xl text-sm border border-red-100">
             {message}

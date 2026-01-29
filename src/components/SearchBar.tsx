@@ -6,7 +6,7 @@ const SearchBar = () => {
     const [inputVal, setInputVal] = useState('')
     const dispatch = useDispatch()
 
-    const submitHandler = (e) => {
+    const submitHandler = (e:React.SyntheticEvent) => {
         e.preventDefault();
         if (inputVal.trim()) {
             dispatch(setQuery(inputVal.trim()))
