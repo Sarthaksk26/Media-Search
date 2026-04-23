@@ -1,21 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
 import { type SearchResult } from '../redux/features/searchSlice';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Download, ExternalLink, Copy, Check } from 'lucide-react';
 
-
-interface ResultCardProps{
+interface ResultCardProps {
     item: SearchResult;
 }
 
-const ResultCard = ({ item}:ResultCardProps) => {
+const ResultCard = ({ item }: ResultCardProps) => {
     const [isHovered, setIsHovered] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
+    const [copied, setCopied] = useState(false)
     const videoRef = useRef<HTMLVideoElement>(null)
 
-    // Handle Video Autoplay on Hover
     useEffect(() => {
         if (item.type === 'video' && videoRef.current) {
             if (isHovered) {
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
             } else {
                 videoRef.current.pause();
                 videoRef.current.currentTime = 0;
@@ -23,7 +24,7 @@ const ResultCard = ({ item}:ResultCardProps) => {
         }
     }, [isHovered, item.type])
 
-    const handleDownload = async (e:React.MouseEvent<HTMLButtonElement>) => {
+    const handleDownload = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
             const response = await fetch(item.src);
@@ -40,25 +41,38 @@ const ResultCard = ({ item}:ResultCardProps) => {
         }
     }
 
+    const handleCopyLink = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(item.src);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
     return (
-        <div 
-            className="group relative rounded-xl overflow-hidden bg-gray-200 mb-4 break-inside-avoid"
+        <motion.div
+            className="group relative rounded-2xl overflow-hidden bg-gray-100 mb-6 break-inside-avoid shadow-sm hover:shadow-xl transition-all duration-500 cursor-zoom-in"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
+            whileHover={{ y: -4 }}
         >
-            {/* Loading Placeholder */}
-            {!isLoaded && (
-                <div className="absolute inset-0 bg-gray-200 animate-pulse z-10" />
-            )}
-
             {/* Media Content */}
-            <div className="relative w-full">
+            <div className="relative w-full overflow-hidden bg-gray-200 aspect-auto">
+                <AnimatePresence>
+                    {!isLoaded && (
+                        <motion.div 
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer z-10" 
+                            style={{ backgroundSize: '200% 100%' }}
+                        />
+                    )}
+                </AnimatePresence>
+
                 {item.type === 'video' ? (
                     <video
                         ref={videoRef}
                         src={item.src}
                         poster={item.thumbnail}
-                        className={`w-full h-auto object-cover transition-opacity duration-500 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-auto object-cover transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                         loop
                         muted
                         playsInline
@@ -68,36 +82,49 @@ const ResultCard = ({ item}:ResultCardProps) => {
                     <img
                         src={item.type === 'photo' ? item.thumbnail : item.src}
                         alt={item.title}
-                        className={`w-full h-auto object-cover transition-transform duration-700 ${isHovered ? 'scale-110' : 'scale-100'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-auto object-cover transition-all duration-700 ${isHovered ? 'scale-105' : 'scale-100'} ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
                         onLoad={() => setIsLoaded(true)}
                         loading="lazy"
                     />
                 )}
             </div>
 
-            {/* Modern Overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4`}>
+            {/* Premium Overlay */}
+            <div className={`absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 z-20`}>
+                <div className="flex justify-end gap-2 translate-y-[-10px] group-hover:translate-y-0 transition-transform duration-300">
+                     <button 
+                        onClick={handleCopyLink}
+                        className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white transition-colors"
+                        title="Copy Link"
+                    >
+                        {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
+                    </button>
+                    <button 
+                        onClick={() => window.open(item.src, '_blank')}
+                        className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white transition-colors"
+                        title="View Original"
+                    >
+                        <ExternalLink size={18} />
+                    </button>
+                </div>
+
                 <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    <p className="text-white text-sm font-medium line-clamp-1 mb-3 drop-shadow-md">
+                    <p className="text-white text-xs font-bold uppercase tracking-widest mb-1 opacity-80">
+                        {item.type}
+                    </p>
+                    <p className="text-white text-sm font-semibold line-clamp-2 mb-4 drop-shadow-md">
                         {item.title}
                     </p>
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => window.open(item.src, '_blank')}
-                            className="flex-1 bg-white/90 hover:bg-white text-black py-2 rounded-lg text-xs font-bold transition-colors"
-                        >
-                            Open
-                        </button>
-                        <button 
-                            onClick={handleDownload}
-                            className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white py-2 rounded-lg text-xs font-bold border border-white/50 transition-colors"
-                        >
-                            Download
-                        </button>
-                    </div>
+                    <button 
+                        onClick={handleDownload}
+                        className="w-full bg-white hover:bg-gray-100 text-black py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg"
+                    >
+                        <Download size={16} />
+                        DOWNLOAD FREE
+                    </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     )
 }
 

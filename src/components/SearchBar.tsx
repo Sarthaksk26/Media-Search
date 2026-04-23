@@ -1,12 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDispatch } from "react-redux";
 import { setQuery } from '../redux/features/searchSlice';
+import { Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SearchBar = () => {
     const [inputVal, setInputVal] = useState('')
     const dispatch = useDispatch()
 
-    const submitHandler = (e:React.SyntheticEvent) => {
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (inputVal.trim()) {
+                dispatch(setQuery(inputVal.trim()))
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [inputVal, dispatch]);
+
+    const submitHandler = (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (inputVal.trim()) {
             dispatch(setQuery(inputVal.trim()))
@@ -14,27 +27,48 @@ const SearchBar = () => {
     }
 
     return (
-        <div className="pt-6 pb-2 px-4 md:px-8 max-w-4xl mx-auto">
+        <div className="pt-8 pb-4 px-4 md:px-8 max-w-5xl mx-auto w-full">
             <form onSubmit={submitHandler} className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400 group-focus-within:text-gray-900 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input
-                    required
-                    className="block w-full pl-11 pr-24 py-3.5 bg-gray-100 border-none rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-black/5 focus:bg-white transition-all shadow-sm"
-                    onChange={(e) => setInputVal(e.target.value)}
-                    type="text"
-                    placeholder="Search photos, videos, or GIFs..."
-                    value={inputVal}
-                />
-                <button
-                    type="submit"
-                    className="absolute right-2 top-2 bottom-2 px-5 bg-black hover:bg-gray-800 text-white rounded-xl text-sm font-medium transition-transform active:scale-95"
+                <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative flex items-center"
                 >
-                    Search
-                </button>
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" />
+                    </div>
+                    
+                    <input
+                        required
+                        className="block w-full pl-12 pr-12 py-4 bg-white border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black transition-all shadow-sm hover:border-gray-300"
+                        onChange={(e) => setInputVal(e.target.value)}
+                        type="text"
+                        placeholder="Search for anything..."
+                        value={inputVal}
+                    />
+
+                    <AnimatePresence>
+                        {inputVal && (
+                            <motion.button
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                type="button"
+                                onClick={() => setInputVal('')}
+                                className="absolute right-4 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                                <X className="h-5 w-5 text-gray-500" />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+                
+                <div className="mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wider font-bold text-gray-400 px-2">
+                    <span>Trending:</span>
+                    <button onClick={() => setInputVal('Cyberpunk')} className="hover:text-black transition-colors">Cyberpunk</button>
+                    <button onClick={() => setInputVal('Nature')} className="hover:text-black transition-colors">Nature</button>
+                    <button onClick={() => setInputVal('Abstract')} className="hover:text-black transition-colors">Abstract</button>
+                </div>
             </form>
         </div>
     )
