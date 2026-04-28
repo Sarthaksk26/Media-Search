@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface SearchState {
   query: string;
-  activeTab: 'photos' | 'videos' | 'gif';
+  activeTab: 'photos' | 'videos' | 'gif' | 'favorites';
   page: number;
 }
 
@@ -20,7 +20,7 @@ const searchSlice = createSlice({
       state.query = action.payload;
       state.page = 1;
     },
-    setActiveTabs(state, action: PayloadAction<'photos' | 'videos' | 'gif'>) {
+    setActiveTabs(state, action: PayloadAction<'photos' | 'videos' | 'gif' | 'favorites'>) {
       state.activeTab = action.payload;
       state.page = 1;
     },

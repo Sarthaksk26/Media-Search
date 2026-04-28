@@ -1,7 +1,10 @@
+import { lazy, Suspense } from 'react';
 import SearchBar from "./components/SearchBar"
 import Tabs from "./components/Tabs"
-import ResultGrid from "./components/ResultGrid"
 import { motion, useScroll, useSpring } from "framer-motion"
+import { Toaster } from 'react-hot-toast';
+
+const ResultGrid = lazy(() => import('./components/ResultGrid'));
 
 const App = () => {
   const { scrollYProgress } = useScroll();
@@ -13,6 +16,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-gray-900 pb-20 selection:bg-black selection:text-white">
+      <Toaster position="bottom-right" toastOptions={{ style: { borderRadius: '1rem', background: '#333', color: '#fff', fontSize: '14px', fontWeight: 'bold' } }} />
       {/* Scroll Progress Bar */}
       <motion.div 
         className="fixed top-0 left-0 right-0 h-1 bg-black origin-left z-[100]" 
@@ -29,7 +33,13 @@ const App = () => {
       
       {/* Main Content */}
       <main className="max-w-[1600px] mx-auto pt-4">
-        <ResultGrid />
+        <Suspense fallback={
+          <div className="w-full h-40 flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          <ResultGrid />
+        </Suspense>
       </main>
 
       {/* Footer / Branding */}

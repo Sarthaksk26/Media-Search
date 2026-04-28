@@ -1,13 +1,14 @@
 import { useDispatch, useSelector } from "react-redux"
 import { setActiveTabs, type SearchState } from "../redux/features/searchSlice"
 import { motion } from "framer-motion"
-import { Image, Video, Ghost } from "lucide-react"
+import { Image, Video, Ghost, Heart } from "lucide-react"
 
 const Tabs = () => {
     const tabs = [
         { id: 'photos', label: 'Photos', icon: Image },
         { id: 'videos', label: 'Videos', icon: Video },
-        { id: 'gif', label: 'GIFs', icon: Ghost }
+        { id: 'gif', label: 'GIFs', icon: Ghost },
+        { id: 'favorites', label: 'Favorites', icon: Heart }
     ]
     const dispatch = useDispatch()
     const activeTab = useSelector((state: { search: SearchState }) => state.search.activeTab)

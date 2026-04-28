@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { type SearchResult } from '../redux/features/searchSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, ExternalLink, Copy, Check } from 'lucide-react';
+import { Download, ExternalLink, Copy, Check, Heart } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { isFavorite as checkIsFavorite, toggleFavorite } from '../utils/favorites';
 
 interface ResultCardProps {
     item: SearchResult;
@@ -11,6 +13,9 @@ const ResultCard = ({ item }: ResultCardProps) => {
     const [isHovered, setIsHovered] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
     const [copied, setCopied] = useState(false)
+    const [isFavorite, setIsFavorite] = useState(() => {
+        return checkIsFavorite(item.id)
+    })
     const videoRef = useRef<HTMLVideoElement>(null)
 
     useEffect(() => {
@@ -26,6 +31,7 @@ const ResultCard = ({ item }: ResultCardProps) => {
 
     const handleDownload = async (e: React.MouseEvent) => {
         e.stopPropagation();
+        const toastId = toast.loading('Downloading media...');
         try {
             const response = await fetch(item.src);
             const blob = await response.blob();
@@ -36,8 +42,10 @@ const ResultCard = ({ item }: ResultCardProps) => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            toast.success('Download complete!', { id: toastId });
         } catch (error) {
             console.error('Download failed', error);
+            toast.error('Download failed', { id: toastId });
         }
     }
 
@@ -45,7 +53,19 @@ const ResultCard = ({ item }: ResultCardProps) => {
         e.stopPropagation();
         navigator.clipboard.writeText(item.src);
         setCopied(true);
+        toast.success('Link copied to clipboard!');
         setTimeout(() => setCopied(false), 2000);
+    }
+
+    const toggleFavoriteHandler = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const newFavoriteStatus = toggleFavorite(item.id);
+        setIsFavorite(newFavoriteStatus);
+        if (newFavoriteStatus) {
+            toast.success('Added to favorites', { icon: '❤️' });
+        } else {
+            toast('Removed from favorites', { icon: '💔' });
+        }
     }
 
     return (
@@ -92,6 +112,17 @@ const ResultCard = ({ item }: ResultCardProps) => {
             {/* Premium Overlay */}
             <div className={`absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 z-20`}>
                 <div className="flex justify-end gap-2 translate-y-[-10px] group-hover:translate-y-0 transition-transform duration-300">
+                    {/* Heart Button for Favorites */}
+                     <button 
+                        onClick={toggleFavoriteHandler}
+                        className={`p-2.5 ${isFavorite ? 'bg-red-500/90' : 'bg-white/10 hover:bg-white/20'} backdrop-blur-md rounded-xl text-white transition-all duration-300`}
+                        title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                    >
+                        <Heart 
+                            size={18} 
+                            className={isFavorite ? 'fill-white' : ''}
+                        />
+                    </button>
                      <button 
                         onClick={handleCopyLink}
                         className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white transition-colors"

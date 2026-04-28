@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { transformPhotoData, transformVideoData, transformGifData } from '../../utils/transformers';
+import { transformPhotoData, transformVideoData, transformGifData, type UnsplashResponseDTO, type PexelsResponseDTO, type TenorResponseDTO } from '../../utils/transformers';
 import { type SearchResult } from '../features/searchSlice';
 
 const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_KEY as string;
@@ -17,7 +17,7 @@ export const mediaApi = createApi({
         params: { query, page, per_page: 20 },
         headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` },
       }),
-      transformResponse: (response: any, _meta, arg) => ({
+      transformResponse: (response: UnsplashResponseDTO, _meta, arg) => ({
         results: transformPhotoData(response),
         hasMore: arg.page < (response.total_pages || 0),
       }),
@@ -44,7 +44,7 @@ export const mediaApi = createApi({
         params: { query, page, per_page: 20 },
         headers: { Authorization: PEXELS_KEY },
       }),
-      transformResponse: (response: any) => ({
+      transformResponse: (response: PexelsResponseDTO) => ({
         results: transformVideoData(response),
         hasMore: !!response.next_page,
       }),
@@ -71,7 +71,7 @@ export const mediaApi = createApi({
           params: { q: query, key: TENOR_KEY, limit, pos },
         };
       },
-      transformResponse: (response: any) => ({
+      transformResponse: (response: TenorResponseDTO) => ({
         results: transformGifData(response),
         hasMore: !!response.next,
       }),
